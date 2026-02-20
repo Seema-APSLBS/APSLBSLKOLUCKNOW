@@ -1,4 +1,4 @@
-iimport streamlit as st
+import streamlit as st
 
 st.title("My new app")
 st.write("Hello! We are creating a web app")
@@ -12,4 +12,5 @@ if st.button("Submit"):
         st.write(f"Your age is {int(age)}")
     else:
         st.warning("Please enter your name before submitting.")
+
 
