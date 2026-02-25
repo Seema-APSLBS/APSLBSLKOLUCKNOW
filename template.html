@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StoryPlay English</title>
+    <style>
+        body { font-family: Arial; text-align: center; margin-top: 50px; }
+        button { padding: 10px 20px; font-size: 18px; }
+        .response { margin-top: 20px; font-size: 20px; color: green; white-space: pre-line; }
+    </style>
+</head>
+<body>
+    <h1>StoryPlay English</h1>
+    <h2 id="storyText">{{ story.text }}</h2>
+    <button onclick="startListening()">🎤 Speak</button>
+    <div class="response" id="response"></div>
+
+    <script>
+        let recognition;
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = "en-US";
+
+            recognition.onresult = function(event) {
+                let spoken = event.results[0][0].transcript;
+                document.getElementById("response").innerText = "You said: " + spoken;
+
+                // Send spoken word to backend for validation
+                fetch("/listen", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ spoken: spoken })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("response").innerText += "\n" + data.response;
+
+                    // Update story text if chapter advanced
+                    if (data.chapter) {
+                        fetch("/")
+                            .then(resp => resp.text())
+                            .then(html => {
+                                document.open();
+                                document.write(html);
+                                document.close();
+                            });
+                    }
+                });
+            };
+
+            recognition.onerror = function(event) {
+                document.getElementById("response").innerText = "Error: " + event.error;
+            };
+        } else {
+            alert("Speech recognition not supported in this browser.");
+        }
+
+        function startListening() {
+            if (recognition) recognition.start();
+        }
+    </script>
+</body>
+</html>
